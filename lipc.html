@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LIPC — Lead Intelligence & Comptroller Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{--bg:#0a0f1e;--bg2:#0f1628;--bg3:#141d35;--border:#1e2d50;--blue:#1a73e8;--blue2:#4a9ef8;--text:#e2e8f8;--muted:#6b7fa8;--green:#34a853;--amber:#fbbc04;--red:#ea4335;--r:6px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+button{cursor:pointer;font-family:inherit;font-size:13px}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.topbar-brand{display:flex;align-items:center;gap:0.8rem}
+.topbar-brand img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--blue)}
+.topbar-title{font-size:0.95rem;font-weight:600;letter-spacing:0.04em;color:var(--blue2)}
+.topbar-title span{color:var(--muted);font-weight:400;font-size:0.75rem;margin-left:0.4rem}
+.topbar-stats{display:flex;gap:1.5rem;align-items:center}
+.topbar-stat{font-size:0.7rem;color:var(--muted);text-align:center}
+.topbar-stat b{display:block;font-size:1.1rem;font-weight:600}
+
+/* TABS */
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 1.5rem;overflow-x:auto}
+.tab{padding:0.7rem 1.1rem;font-size:0.75rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--blue2);border-bottom-color:var(--blue)}
+.badge{background:var(--amber);color:#000;font-size:0.6rem;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:700}
+.badge.blue{background:var(--blue);color:#fff}
+.badge.green{background:var(--green);color:#fff}
+
+/* LAYOUT */
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:210px;min-width:210px;background:var(--bg2);border-right:1px solid var(--border);padding:1rem;overflow-y:auto;display:flex;flex-direction:column;gap:1.2rem}
+.content{flex:1;padding:1.5rem;overflow-y:auto}
+.page{display:none}.page.active{display:block}
+
+/* SIDEBAR */
+.sb-section{font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem}
+.sb-item{padding:0.4rem 0.7rem;border-radius:var(--r);font-size:0.8rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all 0.15s}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.active{background:rgba(26,115,232,0.15);color:var(--blue2)}
+.sb-count{background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:0.6rem;padding:1px 6px;border-radius:8px;font-weight:600}
+
+/* FORMS & CONTROLS */
+select,input[type=text],input[type=number],input[type=date]{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.82rem;padding:0.35rem 0.6rem;border-radius:var(--r);outline:none}
+select:focus,input:focus{border-color:var(--blue)}
+.btn{padding:0.4rem 0.9rem;border-radius:var(--r);border:none;font-size:0.78rem;font-weight:500;transition:all 0.2s;cursor:pointer}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#1557b0}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-ghost:hover{border-color:var(--blue2);color:var(--blue2)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{opacity:0.9}
+.btn-amber{background:var(--amber);color:#000}.btn-amber:hover{opacity:0.9}
+.btn-sm{padding:0.25rem 0.6rem;font-size:0.72rem}
+.btn-red{background:transparent;border:1px solid var(--red);color:var(--red)}
+
+/* PANELS */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem;margin-bottom:1rem}
+.panel h3{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.8rem}
+.info-bar{background:rgba(26,115,232,0.08);border:1px solid rgba(26,115,232,0.2);border-radius:var(--r);padding:0.6rem 1rem;font-size:0.78rem;color:var(--blue2);margin-bottom:1rem}
+.warn-bar{background:rgba(251,188,4,0.08);border:1px solid rgba(251,188,4,0.2);border-radius:var(--r);padding:0.6rem 1rem;font-size:0.78rem;color:var(--amber);margin-bottom:1rem}
+
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+.stat-card-label{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem}
+.stat-card-val{font-size:1.8rem;font-weight:300;line-height:1}
+.stat-card-sub{font-size:0.68rem;color:var(--muted);margin-top:0.25rem}
+
+/* TABLE */
+.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tbl-head{display:flex;align-items:center;justify-content:space-between;padding:0.7rem 1rem;border-bottom:1px solid var(--border)}
+.tbl-title{font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--bg3)}
+th{padding:0.55rem 0.7rem;text-align:left;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;white-space:nowrap;user-select:none}
+th:hover{color:var(--text)}
+td{padding:0.5rem 0.7rem;border-top:1px solid rgba(30,45,80,0.4);font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+tr:hover td{background:rgba(26,115,232,0.04)}
+input[type=checkbox]{accent-color:var(--blue)}
+
+/* PILLS */
+.score-pill{padding:2px 7px;border-radius:8px;font-size:0.68rem;font-weight:600}
+.s-high{background:rgba(52,168,83,0.2);color:#34a853}
+.s-mid{background:rgba(251,188,4,0.2);color:#f0a500}
+.s-low{background:rgba(234,67,53,0.15);color:#ea4335}
+.status-pill{padding:2px 7px;border-radius:8px;font-size:0.68rem;font-weight:500}
+.st-new{background:rgba(26,115,232,0.2);color:var(--blue2)}
+.st-approved{background:rgba(52,168,83,0.2);color:#34a853}
+.st-pushed{background:rgba(138,43,226,0.2);color:#a78bfa}
+.st-rejected{background:rgba(234,67,53,0.15);color:#ea4335}
+.st-review{background:rgba(251,188,4,0.2);color:#f0a500}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--r);padding:2.5rem;text-align:center;cursor:pointer;transition:all 0.2s}
+.upload-zone:hover{border-color:var(--blue);background:rgba(26,115,232,0.04)}
+.upload-zone h3{font-size:0.95rem;margin-bottom:0.3rem}
+.upload-zone p{font-size:0.78rem;color:var(--muted)}
+.upload-zone input{display:none}
+
+/* MINI BAR CHART */
+.bar-chart{display:flex;flex-direction:column;gap:0.35rem}
+.bar-row{display:flex;align-items:center;gap:0.5rem;font-size:0.72rem}
+.bar-label{width:110px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.bar-track{flex:1;background:var(--bg3);border-radius:2px;height:5px}
+.bar-fill{height:100%;border-radius:2px;transition:width 0.4s}
+.bar-count{color:var(--muted);min-width:24px;text-align:right}
+
+/* FILTERS ROW */
+.filters{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:1rem}
+.filter-label{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+
+/* EMPTY */
+.empty{text-align:center;padding:3rem;color:var(--muted)}
+.empty h3{color:var(--text);margin-bottom:0.3rem}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <img id="max-img" src="" alt="Max"/>
+    <div>
+      <div class="topbar-title">LIPC <span>Lead Intelligence & Comptroller Platform</span></div>
+    </div>
+  </div>
+  <div class="topbar-stats">
+    <div class="topbar-stat"><b id="ts-email" style="color:var(--blue2)">0</b>Email Leads</div>
+    <div class="topbar-stat"><b id="ts-research" style="color:var(--amber)">0</b>Research</div>
+    <div class="topbar-stat"><b id="ts-approved" style="color:var(--green)">0</b>Approved</div>
+    <div class="topbar-stat"><b id="ts-pushed" style="color:#a78bfa">0</b>Pushed</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('dashboard')">Dashboard</div>
+  <div class="tab" onclick="showTab('email-leads')">Email Leads <span class="badge blue" id="badge-email">0</span></div>
+  <div class="tab" onclick="showTab('research')">Research List <span class="badge" id="badge-research">0</span></div>
+  <div class="tab" onclick="showTab('approved')">Approved <span class="badge green" id="badge-approved">0</span></div>
+  <div class="tab" onclick="showTab('pushed')">Pushed to CRM <span class="badge" id="badge-pushed">0</span></div>
+  <div class="tab" onclick="showTab('import')">Import CSV</div>
+  <div class="tab" onclick="showTab('scoring')">Scoring</div>
+  <div class="tab" onclick="showTab('logs')">Logs</div>
+</div>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div>
+      <div class="sb-section">By State</div>
+      <div class="sb-item active" onclick="setSideFilter('state','all',this)">All States <span class="sb-count" id="sf-all">0</span></div>
+      <div id="state-sidebar"></div>
+    </div>
+    <div>
+      <div class="sb-section">By Industry</div>
+      <div id="industry-sidebar"></div>
+    </div>
+    <div>
+      <div class="sb-section">By Status</div>
+      <div class="sb-item" onclick="setSideFilter('status','new',this)">New <span class="sb-count" id="sf-new">0</span></div>
+      <div class="sb-item" onclick="setSideFilter('status','review',this)">Review <span class="sb-count" id="sf-review">0</span></div>
+      <div class="sb-item" onclick="setSideFilter('status','approved',this)">Approved <span class="sb-count" id="sf-app">0</span></div>
+      <div class="sb-item" onclick="setSideFilter('status','pushed',this)">Pushed <span class="sb-count" id="sf-pushed">0</span></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="page active">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-card-label">Email Leads</div><div class="stat-card-val" id="d-email" style="color:var(--blue2)">0</div><div class="stat-card-sub">ready for outreach</div></div>
+        <div class="stat-card"><div class="stat-card-label">Research List</div><div class="stat-card-val" id="d-research" style="color:var(--amber)">0</div><div class="stat-card-sub">no email — needs research</div></div>
+        <div class="stat-card"><div class="stat-card-label">Approved</div><div class="stat-card-val" id="d-approved" style="color:var(--green)">0</div><div class="stat-card-sub">ready for CRM</div></div>
+        <div class="stat-card"><div class="stat-card-label">Pushed to CRM</div><div class="stat-card-val" id="d-pushed" style="color:#a78bfa">0</div><div class="stat-card-sub">Frank + Sarah active</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+        <div class="panel"><h3>By Industry</h3><div class="bar-chart" id="chart-industry"></div></div>
+        <div class="panel"><h3>By State</h3><div class="bar-chart" id="chart-state"></div></div>
+      </div>
+      <div class="panel">
+        <h3>Top Scored Email Leads</h3>
+        <div id="dash-top"></div>
+      </div>
+    </div>
+
+    <!-- EMAIL LEADS -->
+    <div id="tab-email-leads" class="page">
+      <div class="info-bar">Email outreach list — all contacts with an email address. Deduplicated by email. Score ranks priority — YOU decide who Frank contacts.</div>
+      <div class="filters">
+        <span class="filter-label">Filter:</span>
+        <select id="f-state" onchange="applyFilters()">
+          <option value="">All States</option>
+          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option>
+          <option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option>
+          <option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+          <option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+          <option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option>
+          <option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option>
+          <option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+          <option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+          <option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option>
+          <option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+        </select>
+        <select id="f-industry" onchange="applyFilters()"><option value="">All Industries</option></select>
+        <select id="f-status" onchange="applyFilters()">
+          <option value="">All Status</option>
+          <option value="new">New</option><option value="review">Review</option>
+          <option value="approved">Approved</option><option value="pushed">Pushed</option><option value="rejected">Rejected</option>
+        </select>
+        <input type="number" id="f-score" placeholder="Min score" style="width:88px" oninput="applyFilters()"/>
+        <input type="text" id="f-search" placeholder="Search..." style="width:160px" oninput="applyFilters()"/>
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+        <div style="margin-left:auto;display:flex;gap:0.4rem">
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV('email')">Export CSV</button>
+          <button class="btn btn-green btn-sm" onclick="bulkApprove()">Approve Selected</button>
+          <button class="btn btn-primary btn-sm" onclick="pushSelected()">Push to CRM</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head">
+          <span class="tbl-title" id="email-count">0 leads</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th><input type="checkbox" id="chk-all" onchange="toggleAll(this)"/></th>
+              <th onclick="sortBy('company')">Company</th>
+              <th onclick="sortBy('first_name')">First Name</th>
+              <th onclick="sortBy('title')">Title</th>
+              <th onclick="sortBy('email')">Email</th>
+              <th onclick="sortBy('state')">State</th>
+              <th onclick="sortBy('postal_code')">ZIP</th>
+              <th onclick="sortBy('industry')">Industry</th>
+              <th onclick="sortBy('score')">Score</th>
+              <th>LinkedIn</th>
+              <th>Website</th>
+              <th onclick="sortBy('date_entered')">Date In</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr></thead>
+            <tbody id="email-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESEARCH LIST -->
+    <div id="tab-research" class="page">
+      <div class="warn-bar">No email found — stored for manual research or future web scraping. Use phone, website, or LinkedIn to find contact info.</div>
+      <div class="filters">
+        <select id="rf-state" onchange="applyResearchFilters()">
+          <option value="">All States</option>
+          <option>TX</option><option>OH</option><option>IL</option><option>GA</option>
+        </select>
+        <select id="rf-industry" onchange="applyResearchFilters()"><option value="">All Industries</option></select>
+        <input type="text" id="rf-search" placeholder="Search..." style="width:160px" oninput="applyResearchFilters()"/>
+        <button class="btn btn-ghost btn-sm" onclick="clearResearchFilters()">Clear</button>
+        <div style="margin-left:auto">
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV('research')">Export CSV</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head">
+          <span class="tbl-title" id="research-count">0 contacts</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Company</th>
+              <th onclick="sortResearch('industry')">Industry</th>
+              <th onclick="sortResearch('state')">State</th>
+              <th onclick="sortResearch('postal_code')">ZIP</th>
+              <th>Phone(s)</th>
+              <th>Website</th>
+              <th>LinkedIn</th>
+              <th>Address</th>
+              <th onclick="sortResearch('date_entered')">Date In</th>
+              <th>Actions</th>
+            </tr></thead>
+            <tbody id="research-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPROVED -->
+    <div id="tab-approved" class="page">
+      <div style="margin-bottom:1rem;display:flex;gap:0.5rem">
+        <button class="btn btn-primary" onclick="pushAll()">Push All to CRM</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV('approved')">Export CSV</button>
+      </div>
+      <div id="approved-table"></div>
+    </div>
+
+    <!-- PUSHED -->
+    <div id="tab-pushed" class="page">
+      <div style="margin-bottom:1rem">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV('pushed')">Export CSV</button>
+      </div>
+      <div id="pushed-table"></div>
+    </div>
+
+    <!-- IMPORT -->
+    <div id="tab-import" class="page">
+      <div class="panel">
+        <h3>Upload CSV — Outscraper or Any Format</h3>
+        <div class="info-bar">
+          LIPC checks your existing database before importing. Contacts with email → Email Leads list. 
+          Contacts without email but with phone/website → Research List. 
+          Duplicates by email or phone are never re-added — existing records updated with new data only if currently unprocessed.
+        </div>
+        <div class="upload-zone" onclick="document.getElementById('csv-file').click()">
+          <h3>Drop CSV here or click to upload</h3>
+          <p>Outscraper Google Maps · Apollo · Any CSV with company + email or phone columns</p>
+          <input type="file" id="csv-file" accept=".csv" onchange="handleCSV(this)"/>
+        </div>
+        <div id="import-result" style="margin-top:1rem"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Upload History</h3>
+        <div id="upload-history"><span style="color:var(--muted);font-size:0.78rem">No uploads yet.</span></div>
+      </div>
+
+      <div class="panel">
+        <h3>Outscraper Settings Reference</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;font-size:0.8rem;line-height:2">
+          <div>
+            <div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Category strings</div>
+            <div style="color:var(--blue2)">veterinary clinic · hvac contractor<br>general contractor · auto repair shop<br>freight company · manufacturing company</div>
+          </div>
+          <div>
+            <div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Settings per search</div>
+            <div style="color:var(--text)">Limit: 200–500 · Min rating: 3.5 · Max: 4.2<br>✓ Emails and Contacts · ✓ Company Insights<br>Use ZIP codes from Outscraper Plan Excel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCORING -->
+    <div id="tab-scoring" class="page">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="panel">
+          <h3>Scoring Rules</h3>
+          <div id="score-rules"></div>
+          <div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+            <input type="text" id="new-rule-label" placeholder="Rule description..." style="flex:1;min-width:160px"/>
+            <input type="number" id="new-rule-val" placeholder="+/-" style="width:55px"/>
+            <button class="btn btn-primary btn-sm" onclick="addRule()">Add</button>
+          </div>
+          <div style="margin-top:0.8rem;display:flex;gap:0.5rem">
+            <button class="btn btn-green btn-sm" onclick="recalcAll()">Recalculate All</button>
+            <button class="btn btn-ghost btn-sm" onclick="resetRules()">Reset Default</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Score Distribution</h3>
+          <div id="score-dist"></div>
+          <div style="margin-top:1rem">
+            <h3 style="margin-bottom:0.5rem">Notes</h3>
+            <textarea id="algo-notes" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:0.6rem;font-family:inherit;font-size:0.78rem;resize:vertical;min-height:80px" placeholder="Monthly feedback — what worked, what didn't..."></textarea>
+            <button class="btn btn-ghost btn-sm" style="margin-top:0.4rem" onclick="localStorage.setItem('lipc_notes',document.getElementById('algo-notes').value)">Save Notes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="tab-logs" class="page">
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+        <button class="btn btn-ghost btn-sm" onclick="clearLogs()">Clear</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportLogs()">Export</button>
+      </div>
+      <div class="tbl-wrap" style="max-height:500px;overflow-y:auto">
+        <div id="log-entries"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+// ── Supabase ───────────────────────────────────────────────────────
+const SUPA_URL = 'https://swwgpvkjqksikanshyuu.supabase.co';
+const SUPA_KEY = 'sb_publishable_BIrC-uEPjIWCoouNHnua1g_fEomi-C1';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+let supaReady = false;
+
+async function initSupabase() {
+  try {
+    const { data, error } = await supa.from('email_leads').select('id').limit(1);
+    if (!error) {
+      supaReady = true;
+      console.log('Supabase connected');
+      await migrateFromLocalStorage();
+    } else {
+      console.warn('Supabase error:', error.message);
+    }
+  } catch(e) {
+    console.warn('Supabase not available:', e.message);
+  }
+}
+
+async function migrateFromLocalStorage() {
+  // One-time migration of localStorage data to Supabase
+  const localEmail = JSON.parse(localStorage.getItem('lipc_email') || '[]');
+  const localResearch = JSON.parse(localStorage.getItem('lipc_research') || '[]');
+  if (localEmail.length > 0) {
+    const { error } = await supa.from('email_leads').upsert(localEmail, {onConflict: 'email', ignoreDuplicates: true});
+    if (!error) { localStorage.removeItem('lipc_email'); console.log('Migrated', localEmail.length, 'email leads'); }
+  }
+  if (localResearch.length > 0) {
+    const { error } = await supa.from('research_list').upsert(localResearch, {onConflict: 'id', ignoreDuplicates: true});
+    if (!error) { localStorage.removeItem('lipc_research'); console.log('Migrated', localResearch.length, 'research contacts'); }
+  }
+  // Reload from Supabase
+  await loadFromSupabase();
+}
+
+async function loadFromSupabase() {
+  const { data: eData } = await supa.from('email_leads').select('*').order('score', {ascending: false});
+  const { data: rData } = await supa.from('research_list').select('*').order('date_entered', {ascending: false});
+  if (eData) emailLeads = eData;
+  if (rData) researchList = rData;
+  filteredEmail = [...emailLeads];
+  filteredResearch = [...researchList];
+  updateStats();
+  renderDashboard();
+  addLog('system', 'Loaded from Supabase — Email: ' + emailLeads.length + ' · Research: ' + researchList.length);
+}
+
+// ── State ───────────────────────────────────────────────────────────
+let emailLeads = JSON.parse(localStorage.getItem('lipc_email') || '[]');
+let researchList = JSON.parse(localStorage.getItem('lipc_research') || '[]');
+let logs = JSON.parse(localStorage.getItem('lipc_logs') || '[]');
+let sideFilterType = 'all', sideFilterVal = 'all';
+let sortCol = 'score', sortDir = -1;
+let sortColR = 'date_entered', sortDirR = -1;
+let filteredEmail = [], filteredResearch = [];
+
+const ALL_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
+
+// Max photo
+document.getElementById('max-img').src = 'data:image/jpeg;base64,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';
+
+// Default scoring rules
+let scoreRules = JSON.parse(localStorage.getItem('lipc_rules') || 'null') || [
+  {label:'Email validated RECEIVING by Outscraper', val:15},
+  {label:'Email status UNKNOWN (try anyway)', val:10},
+  {label:'Email status INVALID (still try)', val:5},
+  {label:'Owner / CEO / Founder title', val:20},
+  {label:'Manager / Director / Controller title', val:10},
+  {label:'Receptionist / Tech / Staff title', val:-10},
+  {label:'Employees 10–50 (sweet spot)', val:20},
+  {label:'Employees 51–150 (good)', val:10},
+  {label:'Employees 250+ (too big)', val:-15},
+  {label:'Revenue $1M–$10M (perfect)', val:20},
+  {label:'Revenue $10M–$20M (good)', val:10},
+  {label:'Revenue $50M+ (too big)', val:-10},
+  {label:'Rating 3.5–4.2 (struggling viable)', val:15},
+  {label:'Rating 4.7+ (likely has systems)', val:3},
+  {label:'Personal email = likely owner', val:8},
+  {label:'No company LinkedIn = no finance team', val:8},
+  {label:'Has social media (owner-operated signal)', val:5},
+  {label:'Chain / parent location detected', val:-45},
+  {label:'Reviews 10–200 (active small biz)', val:5},
+];
+
+// ── Scoring ────────────────────────────────────────────────────────
+function calcScore(lead) {
+  let score = 50;
+  const email = (lead.email || '').toLowerCase();
+  const emp = parseInt(lead.employee_count) || 0;
+  const rev = parseFloat(lead.revenue) || 0;
+  const title = (lead.title || '').toLowerCase();
+  const company = (lead.company || '').toLowerCase();
+  const emailStatus = (lead.email_status || '').toUpperCase();
+  const rating = parseFloat(lead.rating) || 0;
+  const reviews = parseInt(lead.reviews) || 0;
+  const hasLinkedIn = !!(lead.linkedin || lead.company_linkedin);
+  const hasSocial = !!(lead.company_facebook || lead.company_instagram);
+  const locatedIn = (lead.located_in || '');
+
+  // Chain / parent — disqualify
+  if (locatedIn && locatedIn.length > 2) return 5;
+  const chains = ['walmart','costco','petco','petsmart','banfield','national veterinary','vca '];
+  if (chains.some(c => company.includes(c))) return 5;
+
+  // Email status — nudge only, not disqualify
+  if (emailStatus === 'RECEIVING') score += 15;
+  else if (emailStatus === 'UNKNOWN') score += 10;
+  else if (emailStatus === 'INVALID') score += 5;
+  const isPersonal = ['gmail','yahoo','hotmail','aol','icloud','att.net'].some(d => email.includes(d));
+  if (isPersonal) score += 8;
+  else if (email) score += 5;
+
+  // Title
+  const ownerT = ['owner','ceo','president','founder','principal','chief exec','managing partner','proprietor'];
+  const mgmtT = ['manager','director','controller','cfo','coo','vp ','vice president','administrator'];
+  const gateT = ['receptionist','assistant','coordinator','technician','tech ','staff','clerk'];
+  if (ownerT.some(t => title.includes(t))) score += 20;
+  else if (mgmtT.some(t => title.includes(t))) score += 10;
+  else if (gateT.some(t => title.includes(t))) score -= 10;
+
+  // Size
+  if (emp >= 10 && emp <= 50) score += 20;
+  else if (emp > 50 && emp <= 150) score += 10;
+  else if (emp > 150 && emp <= 250) score += 0;
+  else if (emp > 250) score -= 15;
+  else if (emp > 0 && emp < 10) score -= 10;
+
+  // Revenue
+  if (rev >= 1e6 && rev <= 1e7) score += 20;
+  else if (rev > 1e7 && rev <= 2e7) score += 10;
+  else if (rev > 5e7) score -= 10;
+
+  // Rating
+  if (rating >= 3.5 && rating <= 4.2) score += 15;
+  else if (rating > 4.2 && rating <= 4.6) score += 8;
+  else if (rating > 4.6) score += 3;
+  else if (rating > 0 && rating < 3.5) score -= 10;
+
+  // Reviews
+  if (reviews >= 10 && reviews <= 200) score += 5;
+  else if (reviews > 500) score -= 5;
+
+  // Signals
+  if (hasSocial) score += 5;
+  if (!hasLinkedIn) score += 8; else score -= 3;
+
+  return Math.max(0, Math.min(100, score));
+}
+
+// ── CSV Format Detection ───────────────────────────────────────────
+function detectFormat(headers) {
+  const h = headers.map(x => (x||'').toLowerCase());
+  if (h.some(x => x.includes('emails_validator') || x.includes('company_insights') || x === 'place_id')) return 'outscraper';
+  if (h.includes('apollo_id') || h.includes('organization_id')) return 'apollo';
+  return 'generic';
+}
+
+// ── Parse Row ──────────────────────────────────────────────────────
+function parseRow(row, format) {
+  const now = new Date().toISOString().split('T')[0];
+  if (format === 'outscraper') {
+    return {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '_' + Math.random(),
+      company: (row['name'] || row['company_name'] || '').trim(),
+      first_name: (row['first_name'] || '').trim(),
+      last_name: (row['last_name'] || '').trim(),
+      contact_name: [row['first_name']||'', row['last_name']||''].filter(Boolean).join(' ') || row['full_name'] || '',
+      email: (row['email'] || '').trim().toLowerCase(),
+      email_status: row['email.emails_validator.status'] || '',
+      phone: row['phone'] || row['contact_phone'] || row['company_phone'] || '',
+      phones: [row['phone'], row['contact_phone'], row['company_phone']].filter(Boolean).join(' | '),
+      title: row['title'] || '',
+      industry: row['category'] || row['subtypes'] || row['company_insights.industry'] || '',
+      city: row['city'] || '',
+      state: row['state_code'] || extractState(row['state'] || ''),
+      postal_code: row['postal_code'] || '',
+      address: row['address'] || '',
+      employee_count: parseInt(row['company_insights.employees']) || 0,
+      revenue: parseFloat(row['company_insights.revenue']) || 0,
+      rating: parseFloat(row['rating']) || 0,
+      reviews: parseInt(row['reviews']) || 0,
+      website: row['website'] || '',
+      domain: row['domain'] || '',
+      linkedin: row['contact_linkedin'] || '',
+      company_linkedin: row['company_linkedin'] || '',
+      company_facebook: row['company_facebook'] || '',
+      company_instagram: row['company_instagram'] || '',
+      located_in: row['located_in'] || '',
+      source: 'outscraper',
+      status: 'new',
+      date_entered: now,
+    };
+  } else if (format === 'apollo') {
+    return {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '_' + Math.random(),
+      company: (row['Company'] || row['Account Name'] || '').trim(),
+      first_name: row['First Name'] || '',
+      last_name: row['Last Name'] || '',
+      contact_name: [row['First Name']||'', row['Last Name']||''].filter(Boolean).join(' '),
+      email: (row['Email'] || row['Work Email'] || '').trim().toLowerCase(),
+      email_status: row['Email Status'] || 'UNKNOWN',
+      phone: row['Phone'] || row['Direct Phone'] || '',
+      phones: row['Phone'] || '',
+      title: row['Title'] || row['Job Title'] || '',
+      industry: row['Industry'] || '',
+      city: row['City'] || '',
+      state: extractState(row['State'] || row['City'] || ''),
+      postal_code: row['Zip'] || '',
+      address: '',
+      employee_count: parseInt(row['# Employees'] || row['Employees'] || 0),
+      revenue: parseFloat(row['Annual Revenue'] || 0),
+      website: row['Website'] || '',
+      domain: (row['Website']||'').replace(/https?:\/\//,'').split('/')[0],
+      linkedin: row['LinkedIn URL'] || row['Person Linkedin Url'] || '',
+      company_linkedin: row['Company Linkedin Url'] || '',
+      source: 'apollo',
+      status: 'new',
+      date_entered: now,
+    };
+  } else {
+    const now2 = new Date().toISOString().split('T')[0];
+    return {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '_' + Math.random(),
+      company: (row['Company'] || row['company'] || row['name'] || row['Business Name'] || '').trim(),
+      first_name: row['First Name'] || row['first_name'] || '',
+      last_name: row['Last Name'] || row['last_name'] || '',
+      contact_name: [row['First Name']||row['first_name']||'', row['Last Name']||row['last_name']||''].filter(Boolean).join(' '),
+      email: (row['Email'] || row['email'] || '').trim().toLowerCase(),
+      email_status: 'UNKNOWN',
+      phone: row['Phone'] || row['phone'] || '',
+      phones: row['Phone'] || row['phone'] || '',
+      title: row['Title'] || row['title'] || row['Job Title'] || '',
+      industry: row['Industry'] || row['industry'] || row['category'] || '',
+      city: row['City'] || row['city'] || '',
+      state: extractState(row['State'] || row['state'] || ''),
+      postal_code: row['Zip'] || row['postal_code'] || row['ZIP'] || '',
+      address: row['Address'] || row['address'] || '',
+      employee_count: parseInt(row['Employees'] || row['employee_count'] || 0),
+      revenue: parseFloat(row['Revenue'] || row['revenue'] || 0),
+      website: row['Website'] || row['website'] || '',
+      domain: '',
+      linkedin: row['LinkedIn'] || row['linkedin'] || '',
+      company_linkedin: '',
+      source: 'manual',
+      status: 'new',
+      date_entered: now2,
+    };
+  }
+}
+
+// ── CSV Import — Master Logic ──────────────────────────────────────
+function handleCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('import-result').innerHTML = '<div style="color:var(--amber);font-size:0.82rem;padding:0.5rem">Reading file...</div>';
+
+  Papa.parse(file, {
+    header: true, skipEmptyLines: true,
+    complete: function(results) {
+      const rows = results.data;
+      if (!rows.length) { document.getElementById('import-result').innerHTML = '<div style="color:var(--red)">No data found in file.</div>'; return; }
+      const format = detectFormat(Object.keys(rows[0]));
+
+      // For Outscraper: dedupe rows by email first, then by phone
+      let processedRows = rows;
+      if (format === 'outscraper') {
+        const seenEmails = new Set();
+        const seenPhones = new Set();
+        processedRows = [];
+        rows.forEach(row => {
+          const email = (row['email'] || '').trim().toLowerCase();
+          const phone = (row['phone'] || row['contact_phone'] || row['company_phone'] || '').trim();
+          if (email) {
+            if (!seenEmails.has(email)) { seenEmails.add(email); processedRows.push(row); }
+          } else if (phone) {
+            if (!seenPhones.has(phone)) { seenPhones.add(phone); row['_no_email'] = true; processedRows.push(row); }
+          }
+        });
+      }
+
+      let newEmail = 0, newResearch = 0, updatedEmail = 0, updatedResearch = 0, skipped = 0;
+
+      processedRows.forEach(row => {
+        const parsed = parseRow(row, format);
+        if (!parsed.company) { skipped++; return; }
+        const hasEmail = !!(parsed.email);
+        const isNoEmail = row['_no_email'];
+
+        if (hasEmail && !isNoEmail) {
+          // EMAIL LEADS LIST
+          const exists = emailLeads.find(l => l.email === parsed.email);
+          if (exists) {
+            if (exists.status === 'approved' || exists.status === 'pushed') { skipped++; return; }
+            // Update missing fields only
+            if (!exists.phone && parsed.phone) exists.phone = parsed.phone;
+            if (!exists.linkedin && parsed.linkedin) exists.linkedin = parsed.linkedin;
+            if (!exists.website && parsed.website) exists.website = parsed.website;
+            if (!exists.postal_code && parsed.postal_code) exists.postal_code = parsed.postal_code;
+            if (!exists.title && parsed.title) exists.title = parsed.title;
+            if (parsed.rating) exists.rating = parsed.rating;
+            if (parsed.reviews) exists.reviews = parsed.reviews;
+            if (parsed.employee_count) exists.employee_count = parsed.employee_count;
+            if (parsed.revenue) exists.revenue = parsed.revenue;
+            exists.score = calcScore(exists);
+            updatedEmail++;
+          } else {
+            parsed.score = calcScore(parsed);
+            emailLeads.push(parsed);
+            newEmail++;
+          }
+        } else {
+          // RESEARCH LIST — no email
+          const phone = parsed.phone || parsed.phones || '';
+          const exists = researchList.find(r => r.company === parsed.company && r.state === parsed.state);
+          if (exists) {
+            // Update missing fields
+            if (!exists.phone && phone) exists.phone = phone;
+            if (!exists.website && parsed.website) exists.website = parsed.website;
+            if (!exists.linkedin && parsed.linkedin) exists.linkedin = parsed.linkedin;
+            if (!exists.address && parsed.address) exists.address = parsed.address;
+            updatedResearch++;
+          } else {
+            parsed.phone = phone;
+            researchList.push(parsed);
+            newResearch++;
+          }
+        }
+      });
+
+      saveAll();
+      filteredEmail = [...emailLeads];
+      filteredResearch = [...researchList];
+      applyFilters();
+      applyResearchFilters();
+      updateStats();
+
+      const fmt = {outscraper:'Outscraper', apollo:'Apollo', generic:'Generic CSV'}[format];
+      document.getElementById('import-result').innerHTML =
+        `<div style="background:rgba(52,168,83,0.1);border:1px solid rgba(52,168,83,0.3);border-radius:6px;padding:0.8rem 1rem;font-size:0.82rem">
+          <span style="color:#34a853">✓ Import complete (${fmt} format)</span><br>
+          <span style="color:var(--blue2)">+${newEmail} new email leads · +${newResearch} new research contacts</span><br>
+          <span style="color:var(--muted)">${updatedEmail} email records updated · ${updatedResearch} research updated · ${skipped} skipped</span><br>
+          <span style="color:var(--muted)">Email list total: ${emailLeads.length} · Research total: ${researchList.length}</span>
+        </div>`;
+
+      // Upload history
+      const hist = JSON.parse(localStorage.getItem('lipc_uploads') || '[]');
+      hist.unshift({file: file.name, fmt, newEmail, newResearch, updatedEmail, updatedResearch, date: new Date().toLocaleString()});
+      localStorage.setItem('lipc_uploads', JSON.stringify(hist.slice(0,30)));
+      renderUploadHistory();
+      addLog('in', `${fmt}: +${newEmail} email +${newResearch} research · ${file.name}`);
+    }
+  });
+}
+
+// ── Save ───────────────────────────────────────────────────────────
+async function saveAll() {
+  // Always save to localStorage as backup
+  localStorage.setItem('lipc_email', JSON.stringify(emailLeads));
+  localStorage.setItem('lipc_research', JSON.stringify(researchList));
+  // Save to Supabase if connected
+  if (supaReady) {
+    await supa.from('email_leads').upsert(emailLeads, {onConflict: 'email'});
+    await supa.from('research_list').upsert(researchList, {onConflict: 'id'});
+  }
+}
+
+// ── State Extraction ───────────────────────────────────────────────
+function extractState(loc) {
+  if (!loc) return '';
+  const map = {texas:'TX',ohio:'OH',illinois:'IL',georgia:'GA',florida:'FL',california:'CA','new york':'NY',colorado:'CO',arizona:'AZ',michigan:'MI',pennsylvania:'PA',virginia:'VA',washington:'WA',oregon:'OR',nevada:'NV',tennessee:'TN','north carolina':'NC','south carolina':'SC',alabama:'AL',alaska:'AK',arkansas:'AR',connecticut:'CT',delaware:'DE',hawaii:'HI',idaho:'ID',indiana:'IN',iowa:'IA',kansas:'KS',kentucky:'KY',louisiana:'LA',maine:'ME',maryland:'MD',massachusetts:'MA',minnesota:'MN',mississippi:'MS',missouri:'MO',montana:'MT',nebraska:'NE','new hampshire':'NH','new jersey':'NJ','new mexico':'NM','north dakota':'ND',oklahoma:'OK','rhode island':'RI','south dakota':'SD',utah:'UT',vermont:'VT','west virginia':'WV',wisconsin:'WI',wyoming:'WY'};
+  const upper = loc.toUpperCase().trim();
+  if (/^[A-Z]{2}$/.test(upper)) return upper;
+  for (const [k,v] of Object.entries(map)) { if (loc.toLowerCase().includes(k)) return v; }
+  const m = upper.match(/\b(TX|OH|IL|GA|FL|CA|NY|CO|AZ|MI|PA|VA|WA|OR|NV|TN|NC|SC|AL|AK|AR|CT|DE|HI|ID|IN|IA|KS|KY|LA|ME|MD|MA|MN|MS|MO|MT|NE|NH|NJ|NM|ND|OK|RI|SD|UT|VT|WV|WI|WY)\b/);
+  return m ? m[1] : '';
+}
+
+// ── Filters ────────────────────────────────────────────────────────
+function applyFilters() {
+  const state = document.getElementById('f-state')?.value || '';
+  const industry = document.getElementById('f-industry')?.value || '';
+  const status = document.getElementById('f-status')?.value || '';
+  const minScore = parseInt(document.getElementById('f-score')?.value) || 0;
+  const search = (document.getElementById('f-search')?.value || '').toLowerCase();
+
+  filteredEmail = emailLeads.filter(l => {
+    if (state && l.state !== state) return false;
+    if (industry && l.industry !== industry) return false;
+    if (status && l.status !== status) return false;
+    if (l.score < minScore) return false;
+    if (search && !l.company.toLowerCase().includes(search) && !l.email.toLowerCase().includes(search) && !(l.contact_name||'').toLowerCase().includes(search)) return false;
+    if (sideFilterType === 'state' && sideFilterVal !== 'all' && l.state !== sideFilterVal) return false;
+    if (sideFilterType === 'industry' && l.industry !== sideFilterVal) return false;
+    if (sideFilterType === 'status' && l.status !== sideFilterVal) return false;
+    return true;
+  });
+  filteredEmail.sort((a,b) => (a[sortCol] > b[sortCol] ? 1 : -1) * sortDir);
+  renderEmailTable();
+  updateStats();
+}
+
+function applyResearchFilters() {
+  const state = document.getElementById('rf-state')?.value || '';
+  const industry = document.getElementById('rf-industry')?.value || '';
+  const search = (document.getElementById('rf-search')?.value || '').toLowerCase();
+  filteredResearch = researchList.filter(r => {
+    if (state && r.state !== state) return false;
+    if (industry && r.industry !== industry) return false;
+    if (search && !r.company.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  filteredResearch.sort((a,b) => (a[sortColR] > b[sortColR] ? 1 : -1) * sortDirR);
+  renderResearchTable();
+  document.getElementById('research-count').textContent = filteredResearch.length + ' contacts';
+}
+
+function clearFilters() {
+  ['f-state','f-industry','f-status','f-score','f-search'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  filteredEmail = [...emailLeads];
+  applyFilters();
+}
+
+function clearResearchFilters() {
+  ['rf-state','rf-industry','rf-search'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  filteredResearch = [...researchList];
+  applyResearchFilters();
+}
+
+function sortBy(col) { if(sortCol===col) sortDir*=-1; else {sortCol=col;sortDir=-1;} applyFilters(); }
+function sortResearch(col) { if(sortColR===col) sortDirR*=-1; else {sortColR=col;sortDirR=-1;} applyResearchFilters(); }
+
+function setSideFilter(type, val, el) {
+  sideFilterType = type; sideFilterVal = val;
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  if(el) el.classList.add('active');
+  applyFilters();
+}
+
+// ── Render Tables ──────────────────────────────────────────────────
+function sc(s) { return s>=70?'s-high':s>=40?'s-mid':'s-low'; }
+function stc(s) { return {new:'st-new',review:'st-review',approved:'st-approved',pushed:'st-pushed',rejected:'st-rejected'}[s]||'st-new'; }
+function na(v) { return v && v.trim() ? v : '<span style="color:var(--muted)">N/A</span>'; }
+function link(url, label) { return url && url.trim() ? `<a href="${url}" target="_blank" style="color:var(--blue2);font-size:0.75rem">${label}</a>` : '<span style="color:var(--muted)">N/A</span>'; }
+
+function renderEmailTable() {
+  const tbody = document.getElementById('email-tbody');
+  const countEl = document.getElementById('email-count');
+  if (!tbody) return;
+  if (countEl) countEl.textContent = filteredEmail.length + ' leads';
+  if (!filteredEmail.length) { tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:2rem;color:var(--muted)">No leads yet — upload a CSV to get started</td></tr>'; return; }
+  tbody.innerHTML = filteredEmail.map(l => `
+    <tr>
+      <td><input type="checkbox" class="chk" data-id="${l.id}"/></td>
+      <td title="${l.company}" style="font-weight:500;max-width:140px">${l.company}</td>
+      <td>${l.first_name || l.contact_name?.split(' ')[0] || 'N/A'}</td>
+      <td style="font-size:0.75rem;color:var(--muted);max-width:120px" title="${l.title}">${l.title||'N/A'}</td>
+      <td style="color:var(--blue2);font-size:0.78rem;max-width:180px" title="${l.email}">${l.email}</td>
+      <td>${l.state||'—'}</td>
+      <td>${l.postal_code||'—'}</td>
+      <td style="font-size:0.75rem;max-width:120px" title="${l.industry}">${l.industry||'—'}</td>
+      <td><span class="score-pill ${sc(l.score)}">${l.score}</span></td>
+      <td>${link(l.linkedin||l.company_linkedin,'LinkedIn')}</td>
+      <td>${link(l.website,'Website')}</td>
+      <td style="font-size:0.72rem;color:var(--muted)">${l.date_entered||'—'}</td>
+      <td><span class="status-pill ${stc(l.status)}">${l.status}</span></td>
+      <td style="display:flex;gap:3px">
+        ${l.status==='new'||l.status==='review'?`<button class="btn btn-green btn-sm" onclick="setStatus('${l.id}','approved')">✓</button>`:''}
+        ${l.status==='approved'?`<button class="btn btn-primary btn-sm" onclick="setStatus('${l.id}','pushed')">CRM</button>`:''}
+        <button class="btn btn-red btn-sm" onclick="setStatus('${l.id}','rejected')">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderResearchTable() {
+  const tbody = document.getElementById('research-tbody');
+  if (!tbody) return;
+  if (!filteredResearch.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--muted)">No research contacts yet</td></tr>'; return; }
+  tbody.innerHTML = filteredResearch.map(r => `
+    <tr>
+      <td style="font-weight:500;max-width:150px" title="${r.company}">${r.company}</td>
+      <td style="font-size:0.75rem;max-width:120px">${r.industry||'—'}</td>
+      <td>${r.state||'—'}</td>
+      <td>${r.postal_code||'—'}</td>
+      <td style="color:var(--amber);font-size:0.78rem" title="${r.phones||r.phone}">${r.phones||r.phone||'—'}</td>
+      <td>${link(r.website,'Website')}</td>
+      <td>${link(r.linkedin||r.company_linkedin,'LinkedIn')}</td>
+      <td style="font-size:0.72rem;color:var(--muted);max-width:150px" title="${r.address}">${r.address||'—'}</td>
+      <td style="font-size:0.72rem;color:var(--muted)">${r.date_entered||'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="deleteResearch('${r.id}')">Del</button></td>
+    </tr>`).join('');
+}
+
+// ── Status Changes ─────────────────────────────────────────────────
+async function setStatus(id, status) {
+  const lead = emailLeads.find(l => l.id === id);
+  if (!lead) return;
+  lead.status = status;
+  if (status === 'pushed') {
+    lead.pushed_date = new Date().toISOString().split('T')[0];
+    addLog('out', 'Pushed to CRM: ' + lead.company + ' (' + lead.email + ')');
+    // ── CRM PUSH HOOK ──────────────────────────────────────────
+    // fetch('/api/crm-push', { method:'POST', body: JSON.stringify(lead) })
+  }
+  if (supaReady) {
+    await supa.from('email_leads').upsert([lead], {onConflict: 'email'});
+  }
+  saveAll(); applyFilters(); updateStats();
+}
+
+function deleteResearch(id) {
+  researchList = researchList.filter(r => r.id !== id);
+  saveAll(); applyResearchFilters(); updateStats();
+}
+
+function bulkApprove() {
+  document.querySelectorAll('.chk:checked').forEach(cb => {
+    const l = emailLeads.find(x => x.id === cb.dataset.id);
+    if (l) l.status = 'approved';
+  });
+  saveAll(); applyFilters(); updateStats();
+}
+
+function pushSelected() {
+  document.querySelectorAll('.chk:checked').forEach(cb => {
+    const l = emailLeads.find(x => x.id === cb.dataset.id);
+    if (l && l.status === 'approved') { l.status = 'pushed'; l.pushed_date = new Date().toISOString().split('T')[0]; addLog('out','Pushed: '+l.company); }
+  });
+  saveAll(); applyFilters(); updateStats();
+}
+
+function pushAll() {
+  emailLeads.filter(l => l.status === 'approved').forEach(l => { l.status = 'pushed'; l.pushed_date = new Date().toISOString().split('T')[0]; });
+  saveAll(); applyFilters(); updateStats();
+}
+
+function toggleAll(cb) { document.querySelectorAll('.chk').forEach(c => c.checked = cb.checked); }
+
+// ── Status Tables ──────────────────────────────────────────────────
+function renderStatusTable(elId, data) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!data.length) { el.innerHTML = '<div class="empty"><h3>Nothing here yet</h3></div>'; return; }
+  el.innerHTML = '<div class="tbl-wrap"><div style="overflow-x:auto"><table><thead><tr><th>Company</th><th>First Name</th><th>Email</th><th>State</th><th>Industry</th><th>Score</th><th>Date In</th><th>Pushed</th><th>Actions</th></tr></thead><tbody>' +
+    data.map(l => `<tr>
+      <td style="font-weight:500">${l.company}</td>
+      <td>${l.first_name||l.contact_name?.split(' ')[0]||'—'}</td>
+      <td style="color:var(--blue2);font-size:0.78rem">${l.email}</td>
+      <td>${l.state||'—'}</td>
+      <td style="font-size:0.75rem">${l.industry||'—'}</td>
+      <td><span class="score-pill ${sc(l.score)}">${l.score}</span></td>
+      <td style="font-size:0.72rem;color:var(--muted)">${l.date_entered||'—'}</td>
+      <td style="font-size:0.72rem;color:var(--muted)">${l.pushed_date||'—'}</td>
+      <td style="display:flex;gap:3px">
+        ${elId==='approved-table'?`<button class="btn btn-primary btn-sm" onclick="setStatus('${l.id}','pushed')">Push CRM</button>`:''}
+        <button class="btn btn-red btn-sm" onclick="setStatus('${l.id}','rejected')">✕</button>
+      </td></tr>`).join('') + '</tbody></table></div></div>';
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('d-email').textContent = emailLeads.length;
+  document.getElementById('d-research').textContent = researchList.length;
+  document.getElementById('d-approved').textContent = emailLeads.filter(l=>l.status==='approved').length;
+  document.getElementById('d-pushed').textContent = emailLeads.filter(l=>l.status==='pushed').length;
+
+  const allLeads = [...emailLeads];
+  // Industry chart
+  const byInd = {};
+  allLeads.forEach(l => { if(l.industry) byInd[l.industry] = (byInd[l.industry]||0)+1; });
+  const maxI = Math.max(...Object.values(byInd), 1);
+  document.getElementById('chart-industry').innerHTML = Object.entries(byInd).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v]) =>
+    `<div class="bar-row"><span class="bar-label">${k}</span><div class="bar-track"><div class="bar-fill" style="width:${v/maxI*100}%;background:var(--blue)"></div></div><span class="bar-count">${v}</span></div>`
+  ).join('') || '<div style="color:var(--muted);font-size:0.78rem">No data yet</div>';
+
+  // State chart
+  const bySt = {};
+  allLeads.forEach(l => { if(l.state) bySt[l.state] = (bySt[l.state]||0)+1; });
+  const maxS = Math.max(...Object.values(bySt), 1);
+  document.getElementById('chart-state').innerHTML = Object.entries(bySt).sort((a,b)=>b[1]-a[1]).map(([k,v]) =>
+    `<div class="bar-row"><span class="bar-label">${k}</span><div class="bar-track"><div class="bar-fill" style="width:${v/maxS*100}%;background:var(--green)"></div></div><span class="bar-count">${v}</span></div>`
+  ).join('') || '<div style="color:var(--muted);font-size:0.78rem">No data yet</div>';
+
+  // Top leads
+  const top = [...emailLeads].sort((a,b)=>b.score-a.score).slice(0,5);
+  document.getElementById('dash-top').innerHTML = top.length ?
+    '<div style="overflow-x:auto"><table><thead><tr><th>Company</th><th>Email</th><th>State</th><th>Industry</th><th>Score</th><th>Status</th></tr></thead><tbody>' +
+    top.map(l=>`<tr><td style="font-weight:500">${l.company}</td><td style="color:var(--blue2);font-size:0.78rem">${l.email}</td><td>${l.state||'—'}</td><td style="font-size:0.75rem">${l.industry||'—'}</td><td><span class="score-pill ${sc(l.score)}">${l.score}</span></td><td><span class="status-pill ${stc(l.status)}">${l.status}</span></td></tr>`).join('') + '</tbody></table></div>' :
+    '<div class="empty"><h3>No leads yet</h3><p>Import a CSV from the Import tab to get started</p></div>';
+}
+
+// ── Stats Update ───────────────────────────────────────────────────
+function updateStats() {
+  const approved = emailLeads.filter(l=>l.status==='approved').length;
+  const pushed = emailLeads.filter(l=>l.status==='pushed').length;
+  document.getElementById('ts-email').textContent = emailLeads.length;
+  document.getElementById('ts-research').textContent = researchList.length;
+  document.getElementById('ts-approved').textContent = approved;
+  document.getElementById('ts-pushed').textContent = pushed;
+  document.getElementById('badge-email').textContent = emailLeads.filter(l=>l.status==='new').length;
+  document.getElementById('badge-research').textContent = researchList.length;
+  document.getElementById('badge-approved').textContent = approved;
+  document.getElementById('badge-pushed').textContent = pushed;
+  document.getElementById('sf-all').textContent = emailLeads.length;
+  document.getElementById('sf-new').textContent = emailLeads.filter(l=>l.status==='new').length;
+  document.getElementById('sf-review').textContent = emailLeads.filter(l=>l.status==='review').length;
+  document.getElementById('sf-app').textContent = approved;
+  document.getElementById('sf-pushed').textContent = pushed;
+
+  // State sidebar
+  const bySt = {};
+  emailLeads.forEach(l => { if(l.state) bySt[l.state] = (bySt[l.state]||0)+1; });
+  document.getElementById('state-sidebar').innerHTML = Object.entries(bySt).sort((a,b)=>b[1]-a[1]).map(([k,v]) =>
+    `<div class="sb-item" onclick="setSideFilter('state','${k}',this)">${k} <span class="sb-count">${v}</span></div>`).join('');
+
+  // Industry sidebar
+  const byInd = {};
+  emailLeads.forEach(l => { if(l.industry) byInd[l.industry] = (byInd[l.industry]||0)+1; });
+  document.getElementById('industry-sidebar').innerHTML = Object.entries(byInd).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k,v]) =>
+    `<div class="sb-item" onclick="setSideFilter('industry','${k}',this)">${k} <span class="sb-count">${v}</span></div>`).join('');
+
+  // Industry filter dropdown
+  const sel = document.getElementById('f-industry');
+  if (sel) {
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All Industries</option>' + Object.keys(byInd).sort().map(k=>`<option ${k===cur?'selected':''}>${k}</option>`).join('');
+  }
+  const rsel = document.getElementById('rf-industry');
+  if (rsel) {
+    const rcur = rsel.value;
+    const rbyInd = {};
+    researchList.forEach(r => { if(r.industry) rbyInd[r.industry] = (rbyInd[r.industry]||0)+1; });
+    rsel.innerHTML = '<option value="">All Industries</option>' + Object.keys(rbyInd).sort().map(k=>`<option ${k===rcur?'selected':''}>${k}</option>`).join('');
+  }
+}
+
+// ── Scoring Editor ─────────────────────────────────────────────────
+function renderScoring() {
+  document.getElementById('score-rules').innerHTML = scoreRules.map((r,i) =>
+    `<div style="display:grid;grid-template-columns:1fr 60px 30px;gap:0.5rem;align-items:center;padding:0.4rem 0;border-bottom:1px solid rgba(30,45,80,0.3)">
+      <span style="font-size:0.8rem">${r.label}</span>
+      <input type="number" value="${r.val}" style="width:55px;text-align:right" onchange="scoreRules[${i}].val=parseInt(this.value);localStorage.setItem('lipc_rules',JSON.stringify(scoreRules))"/>
+      <button onclick="scoreRules.splice(${i},1);localStorage.setItem('lipc_rules',JSON.stringify(scoreRules));renderScoring()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.85rem">✕</button>
+    </div>`).join('');
+
+  const dist = [0,0,0,0,0];
+  emailLeads.forEach(l => { if(l.score<20)dist[0]++; else if(l.score<40)dist[1]++; else if(l.score<60)dist[2]++; else if(l.score<80)dist[3]++; else dist[4]++; });
+  const maxD = Math.max(...dist,1);
+  document.getElementById('score-dist').innerHTML = ['0–19','20–39','40–59','60–79','80–100'].map((label,i) =>
+    `<div class="bar-row"><span class="bar-label">${label}</span><div class="bar-track"><div class="bar-fill" style="width:${dist[i]/maxD*100}%;background:${['var(--red)','var(--red)','var(--amber)','var(--green)','var(--green)'][i]}"></div></div><span class="bar-count">${dist[i]}</span></div>`
+  ).join('');
+
+  const ta = document.getElementById('algo-notes');
+  if (ta) ta.value = localStorage.getItem('lipc_notes') || '';
+}
+
+function addRule() {
+  const label = document.getElementById('new-rule-label').value.trim();
+  const val = parseInt(document.getElementById('new-rule-val').value);
+  if (!label || isNaN(val)) return;
+  scoreRules.push({label, val});
+  localStorage.setItem('lipc_rules', JSON.stringify(scoreRules));
+  document.getElementById('new-rule-label').value = '';
+  document.getElementById('new-rule-val').value = '';
+  renderScoring();
+}
+
+function recalcAll() {
+  emailLeads.forEach(l => l.score = calcScore(l));
+  saveAll(); applyFilters();
+  alert('Scores recalculated for ' + emailLeads.length + ' leads');
+}
+
+function resetRules() {
+  localStorage.removeItem('lipc_rules');
+  location.reload();
+}
+
+// ── Export ─────────────────────────────────────────────────────────
+function exportCSV(type) {
+  let data, filename;
+  if (type === 'email') { data = filteredEmail.length ? filteredEmail : emailLeads; filename = 'lipc_email_leads'; }
+  else if (type === 'research') { data = filteredResearch.length ? filteredResearch : researchList; filename = 'lipc_research_list'; }
+  else if (type === 'approved') { data = emailLeads.filter(l=>l.status==='approved'); filename = 'lipc_approved'; }
+  else if (type === 'pushed') { data = emailLeads.filter(l=>l.status==='pushed'); filename = 'lipc_pushed_crm'; }
+  const fields = type === 'research'
+    ? ['company','industry','state','postal_code','phone','phones','website','linkedin','company_linkedin','address','date_entered']
+    : ['company','first_name','title','email','email_status','state','postal_code','industry','score','status','linkedin','website','date_entered','pushed_date'];
+  const header = fields.join(',');
+  const csv = header + '\n' + data.map(r => fields.map(f => `"${(r[f]||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = filename + '_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  addLog('out', 'Exported ' + data.length + ' records: ' + filename);
+}
+
+// ── Logs ───────────────────────────────────────────────────────────
+function addLog(dir, msg) {
+  logs.unshift({time: new Date().toLocaleTimeString(), dir, msg});
+  if (logs.length > 200) logs.pop();
+  localStorage.setItem('lipc_logs', JSON.stringify(logs));
+}
+
+function renderLogs() {
+  document.getElementById('log-entries').innerHTML = logs.length ?
+    logs.map(l=>`<div style="font-size:0.75rem;font-family:monospace;padding:0.3rem 0.5rem;border-bottom:1px solid rgba(30,45,80,0.3);display:flex;gap:0.8rem">
+      <span style="color:var(--muted);flex-shrink:0">${l.time}</span>
+      <span style="color:${l.dir==='in'?'var(--blue2)':l.dir==='out'?'var(--green)':'var(--amber)'}">[${l.dir.toUpperCase()}]</span>
+      <span>${l.msg}</span></div>`).join('') :
+    '<div style="padding:1rem;color:var(--muted);font-size:0.78rem">No logs yet</div>';
+}
+
+function clearLogs() { logs = []; localStorage.setItem('lipc_logs','[]'); renderLogs(); }
+function exportLogs() {
+  const txt = logs.map(l=>`[${l.time}] [${l.dir.toUpperCase()}] ${l.msg}`).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt])); a.download = 'lipc_logs.txt'; a.click();
+}
+
+// ── Upload History ─────────────────────────────────────────────────
+function renderUploadHistory() {
+  const el = document.getElementById('upload-history');
+  if (!el) return;
+  const hist = JSON.parse(localStorage.getItem('lipc_uploads') || '[]');
+  if (!hist.length) { el.innerHTML = '<span style="color:var(--muted);font-size:0.78rem">No uploads yet.</span>'; return; }
+  el.innerHTML = hist.map(h =>
+    `<div style="display:flex;gap:1rem;padding:0.35rem 0;border-bottom:1px solid rgba(30,45,80,0.3);font-size:0.75rem;flex-wrap:wrap">
+      <span style="color:var(--muted);min-width:130px">${h.date}</span>
+      <span style="color:var(--blue2)">${h.fmt}</span>
+      <span style="color:var(--green)">+${h.newEmail} email</span>
+      <span style="color:var(--amber)">+${h.newResearch} research</span>
+      <span style="color:var(--muted)">${h.updatedEmail||0} updated</span>
+      <span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${h.file}</span>
+    </div>`).join('');
+}
+
+// ── Tab Navigation ─────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name)?.classList.add('active');
+  const tabs = ['dashboard','email-leads','research','approved','pushed','import','scoring','logs'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)]?.classList.add('active');
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'email-leads') { filteredEmail = [...emailLeads]; applyFilters(); }
+  if (name === 'research') { filteredResearch = [...researchList]; applyResearchFilters(); }
+  if (name === 'approved') renderStatusTable('approved-table', emailLeads.filter(l=>l.status==='approved'));
+  if (name === 'pushed') renderStatusTable('pushed-table', emailLeads.filter(l=>l.status==='pushed'));
+  if (name === 'scoring') renderScoring();
+  if (name === 'logs') renderLogs();
+  if (name === 'import') renderUploadHistory();
+}
+
+// ── Init ───────────────────────────────────────────────────────────
+filteredEmail = [...emailLeads];
+filteredResearch = [...researchList];
+updateStats();
+renderDashboard();
+addLog('system', 'LIPC initialized — Email: ' + emailLeads.length + ' · Research: ' + researchList.length);
+</script>
+</body>
+</html>
