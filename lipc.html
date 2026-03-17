@@ -322,6 +322,11 @@ input[type=checkbox]{accent-color:var(--blue)}
       </div>
 
       <div class="panel">
+        <h3>Supabase Sync</h3>
+        <div id="supa-sync-status" style="font-size:0.78rem;color:var(--muted);margin-bottom:0.6rem">Click to force sync all leads to Supabase database.</div>
+        <button class="btn btn-primary btn-sm" onclick="forceSyncSupabase()">Force Sync to Supabase</button>
+      </div>
+      <div class="panel">
         <h3>Upload History</h3>
         <div id="upload-history"><span style="color:var(--muted);font-size:0.78rem">No uploads yet.</span></div>
       </div>
@@ -392,17 +397,23 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 let supaReady = false;
 
 async function initSupabase() {
+  if(!supa){ console.warn('Supabase client not initialized — check keys'); return; }
   try {
     const { data, error } = await supa.from('email_leads').select('id').limit(1);
     if (!error) {
       supaReady = true;
-      console.log('Supabase connected');
+      console.log('Supabase connected ✓');
+      // Show connection status in topbar
+      const el = document.getElementById('ts-pushed');
+      if(el) el.title = 'Supabase connected';
       await migrateFromLocalStorage();
     } else {
       console.warn('Supabase error:', error.message);
+      supaReady = false;
     }
   } catch(e) {
     console.warn('Supabase not available:', e.message);
+    supaReady = false;
   }
 }
 
@@ -744,13 +755,18 @@ function handleCSV(input) {
 
 // ── Save ───────────────────────────────────────────────────────────
 async function saveAll() {
-  // Always save to localStorage as backup
   localStorage.setItem('lipc_email', JSON.stringify(emailLeads));
   localStorage.setItem('lipc_research', JSON.stringify(researchList));
-  // Save to Supabase if connected
-  if (supaReady) {
-    await supa.from('email_leads').upsert(emailLeads, {onConflict: 'email'});
-    await supa.from('research_list').upsert(researchList, {onConflict: 'id'});
+  if (supaReady && supa) {
+    try {
+      // Upsert in chunks of 50 to avoid payload limits
+      for(let i=0;i<emailLeads.length;i+=50){
+        await supa.from('email_leads').upsert(emailLeads.slice(i,i+50),{onConflict:'email',ignoreDuplicates:false});
+      }
+      for(let i=0;i<researchList.length;i+=50){
+        await supa.from('research_list').upsert(researchList.slice(i,i+50),{onConflict:'id',ignoreDuplicates:false});
+      }
+    } catch(e){ console.warn('Supabase save error:',e.message); }
   }
 }
 
@@ -1107,6 +1123,27 @@ function exportLogs() {
 }
 
 // ── Upload History ─────────────────────────────────────────────────
+async function forceSyncSupabase() {
+  const el = document.getElementById('supa-sync-status');
+  if(!supa){ if(el)el.textContent='Supabase not connected — check keys in LIPC code'; return; }
+  if(el)el.textContent = 'Syncing...';
+  try {
+    let synced = 0;
+    for(let i=0;i<emailLeads.length;i+=50){
+      const {error} = await supa.from('email_leads').upsert(emailLeads.slice(i,i+50),{onConflict:'email'});
+      if(!error) synced += Math.min(50, emailLeads.length-i);
+    }
+    for(let i=0;i<researchList.length;i+=50){
+      await supa.from('research_list').upsert(researchList.slice(i,i+50),{onConflict:'id'});
+    }
+    supaReady = true;
+    if(el)el.innerHTML = '<span style="color:var(--green)">✓ Synced ' + synced + ' email leads + ' + researchList.length + ' research contacts to Supabase</span>';
+    addLog('system','Force synced ' + synced + ' leads to Supabase');
+  } catch(e) {
+    if(el)el.textContent = 'Error: ' + e.message;
+  }
+}
+
 function renderUploadHistory() {
   const el = document.getElementById('upload-history');
   if (!el) return;
