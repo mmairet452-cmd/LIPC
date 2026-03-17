@@ -332,17 +332,89 @@ input[type=checkbox]{accent-color:var(--blue)}
       </div>
 
       <div class="panel">
-        <h3>Outscraper Settings Reference</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;font-size:0.8rem;line-height:2">
-          <div>
-            <div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Category strings</div>
-            <div style="color:var(--blue2)">veterinary clinic · hvac contractor<br>general contractor · auto repair shop<br>freight company · manufacturing company</div>
+        <h3>Outscraper — Direct Search</h3>
+        <div class="info" style="margin-bottom:0.8rem">Pull leads directly from Outscraper without downloading CSV. Cost estimated before pulling. Target: $0.60–$0.90 per search.</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Industry / Category</label>
+            <select id="os-industry" onchange="estimateCost()">
+              <option value="hvac contractor">HVAC Contractor</option>
+              <option value="general contractor">General Contractor</option>
+              <option value="construction company">Construction Company</option>
+              <option value="manufacturing company">Manufacturing Company</option>
+              <option value="freight company">Freight / Logistics</option>
+              <option value="auto repair shop">Auto Repair Shop</option>
+              <option value="warehouse facility">Warehouse / 3PL</option>
+              <option value="veterinary clinic">Veterinary Clinic</option>
+              <option value="software company">SaaS / Tech Company</option>
+              <option value="wholesale distributor">Wholesale Distributor</option>
+            </select>
           </div>
-          <div>
-            <div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Settings per search</div>
-            <div style="color:var(--text)">Limit: 200–500 · Min rating: 3.5 · Max: 4.2<br>✓ Emails and Contacts · ✓ Company Insights<br>Use ZIP codes from Outscraper Plan Excel</div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">State</label>
+            <select id="os-state" onchange="estimateCost()">
+              <option value="Texas">Texas (TX)</option>
+              <option value="Ohio">Ohio (OH)</option>
+              <option value="Illinois">Illinois (IL)</option>
+              <option value="Georgia">Georgia (GA)</option>
+              <option value="Florida">Florida (FL)</option>
+              <option value="California">California (CA)</option>
+              <option value="Michigan">Michigan (MI)</option>
+              <option value="Pennsylvania">Pennsylvania (PA)</option>
+            </select>
           </div>
         </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Limit (records)</label>
+            <select id="os-limit" onchange="estimateCost()">
+              <option value="100">100 records</option>
+              <option value="150">150 records</option>
+              <option value="200" selected>200 records</option>
+              <option value="300">300 records</option>
+              <option value="400">400 records</option>
+              <option value="500">500 records</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Min Rating</label>
+            <select id="os-minrating" onchange="estimateCost()">
+              <option value="3.0">3.0</option>
+              <option value="3.5" selected>3.5</option>
+              <option value="4.0">4.0</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Max Rating</label>
+            <select id="os-maxrating" onchange="estimateCost()">
+              <option value="4.2" selected>4.2</option>
+              <option value="4.5">4.5</option>
+              <option value="5.0">5.0 (no max)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Cost Estimator -->
+        <div id="os-estimate" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:0.8rem;margin-bottom:0.8rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+          <div>
+            <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em">Estimated Cost</div>
+            <div id="os-cost" style="font-size:1.4rem;font-weight:300;color:var(--green)">$0.62</div>
+            <div id="os-cost-detail" style="font-size:0.7rem;color:var(--muted)">200 records × ~$0.003 + email enrichment</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:0.68rem;color:var(--muted);margin-bottom:0.3rem">Already in LIPC (will be skipped)</div>
+            <div id="os-existing" style="font-size:0.9rem;font-weight:600;color:var(--amber)">0 existing</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <button class="btn btn-primary" onclick="runOutscraperSearch()" id="os-btn">Pull from Outscraper</button>
+          <button class="btn btn-ghost btn-sm" onclick="estimateCost()">Refresh Estimate</button>
+          <div id="os-status" style="font-size:0.78rem;color:var(--muted)"></div>
+        </div>
+        <div id="os-result" style="margin-top:0.8rem"></div>
       </div>
     </div>
 
@@ -1144,6 +1216,168 @@ async function forceSyncSupabase() {
   }
 }
 
+// ── Outscraper API ────────────────────────────────────────────────
+function estimateCost(){
+  const limit = parseInt(document.getElementById('os-limit')?.value)||200;
+  // Outscraper pricing: ~$0.001 per basic record + $0.002 per email enrichment
+  // Average ~60-70% have emails
+  const baseCost = limit * 0.001;
+  const emailCost = limit * 0.65 * 0.002;
+  const total = baseCost + emailCost;
+  const costEl = document.getElementById('os-cost');
+  const detailEl = document.getElementById('os-cost-detail');
+  const existingEl = document.getElementById('os-existing');
+  if(costEl) costEl.textContent = '$' + total.toFixed(2);
+  // Color code by cost range
+  if(costEl){
+    if(total <= 0.90) costEl.style.color = 'var(--green)';
+    else if(total <= 1.50) costEl.style.color = 'var(--amber)';
+    else costEl.style.color = 'var(--red)';
+  }
+  if(detailEl) detailEl.textContent = limit + ' records × $0.001 + ~' + Math.round(limit*0.65) + ' email enrichments × $0.002';
+  // Count existing leads for this industry/state combo
+  const industry = document.getElementById('os-industry')?.value||'';
+  const state = document.getElementById('os-state')?.value||'';
+  const stateCode = {Texas:'TX',Ohio:'OH',Illinois:'IL',Georgia:'GA',Florida:'FL',California:'CA',Michigan:'MI',Pennsylvania:'PA'}[state]||state;
+  const existing = emailLeads.filter(l => 
+    (l.industry||'').toLowerCase().includes(industry.split(' ')[0].toLowerCase()) && 
+    l.state === stateCode
+  ).length;
+  if(existingEl) existingEl.textContent = existing + ' existing';
+}
+
+async function runOutscraperSearch(){
+  const industry = document.getElementById('os-industry')?.value||'';
+  const state = document.getElementById('os-state')?.value||'';
+  const limit = parseInt(document.getElementById('os-limit')?.value)||200;
+  const minRating = parseFloat(document.getElementById('os-minrating')?.value)||3.5;
+  const maxRating = parseFloat(document.getElementById('os-maxrating')?.value)||4.2;
+  const btn = document.getElementById('os-btn');
+  const statusEl = document.getElementById('os-status');
+  const resultEl = document.getElementById('os-result');
+
+  // Cost check
+  const limit2 = limit;
+  const total = (limit2 * 0.001) + (limit2 * 0.65 * 0.002);
+  if(total > 1.50){
+    if(!confirm('Estimated cost $' + total.toFixed(2) + ' exceeds $1.50. Continue?')) return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Searching...';
+  if(statusEl) statusEl.textContent = 'Calling Outscraper API...';
+
+  try {
+    const query = `${industry}, ${state}, USA`;
+    const params = new URLSearchParams({
+      query: query,
+      limit: limit,
+      rating: minRating,
+      'enrichment[]': 'emails_validator',
+      language: 'en',
+      region: 'us',
+    });
+
+    const res = await fetch('/api/outscraper?' + params.toString());
+    
+    if(!res.ok){
+      const err = await res.json();
+      throw new Error(err.error || 'API error ' + res.status);
+    }
+
+    const data = await res.json();
+    const rows = Array.isArray(data) ? data : (data.data || []);
+
+    if(!rows.length) throw new Error('No results returned');
+
+    if(statusEl) statusEl.textContent = 'Processing ' + rows.length + ' results...';
+
+    // Process results — same logic as CSV import
+    let newEmail = 0, newResearch = 0, skipped = 0;
+    const now = new Date().toISOString().split('T')[0];
+
+    rows.forEach(row => {
+      if(!row.name) { skipped++; return; }
+      const rating = parseFloat(row.rating)||0;
+      if(maxRating < 5 && rating > maxRating) { skipped++; return; }
+
+      const email = (row.email || '').trim().toLowerCase();
+      const phone = row.phone || row.company_phone || '';
+      const hasEmail = !!email;
+
+      const parsed = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now()+'_'+Math.random(),
+        company: (row.name||'').trim(),
+        first_name: row.first_name||'',
+        last_name: row.last_name||'',
+        contact_name: [row.first_name||'',row.last_name||''].filter(Boolean).join(' '),
+        email: email,
+        email_status: row['email.emails_validator.status']||'',
+        phone: phone,
+        phones: phone,
+        title: row.title||'',
+        industry: row.category||row.subtypes||industry,
+        city: row.city||'',
+        state: row.state_code||extractState(row.state||state),
+        postal_code: row.postal_code||'',
+        address: row.address||'',
+        employee_count: parseInt(row['company_insights.employees'])||0,
+        revenue: parseFloat(row['company_insights.revenue'])||0,
+        rating: rating,
+        reviews: parseInt(row.reviews)||0,
+        website: row.website||'',
+        linkedin: row.contact_linkedin||'',
+        company_linkedin: row.company_linkedin||'',
+        located_in: row.located_in||'',
+        source: 'outscraper_api',
+        status: 'new',
+        date_entered: now,
+      };
+
+      if(hasEmail){
+        const exists = emailLeads.find(l => l.email === email);
+        if(exists){ skipped++; return; }
+        parsed.score = calcScore(parsed);
+        emailLeads.push(parsed);
+        newEmail++;
+      } else if(phone) {
+        const exists = researchList.find(r => r.company === parsed.company && r.state === parsed.state);
+        if(exists){ skipped++; return; }
+        researchList.push(parsed);
+        newResearch++;
+      } else { skipped++; }
+    });
+
+    saveAll();
+    filteredEmail = [...emailLeads];
+    filteredResearch = [...researchList];
+    applyFilters();
+    applyResearchFilters();
+    updateStats();
+
+    // Log to upload history
+    const hist = JSON.parse(localStorage.getItem('lipc_uploads')||'[]');
+    hist.unshift({file: query+' (API)', fmt:'Outscraper API', newEmail, newResearch, updatedEmail:0, updatedResearch:0, date:new Date().toLocaleString()});
+    localStorage.setItem('lipc_uploads', JSON.stringify(hist.slice(0,30)));
+    renderUploadHistory();
+
+    const cost = ((rows.length * 0.001) + (newEmail * 0.002)).toFixed(2);
+    if(resultEl) resultEl.innerHTML = `<div style="background:rgba(52,168,83,0.1);border:1px solid rgba(52,168,83,0.3);border-radius:6px;padding:0.8rem;font-size:0.82rem">
+      <span style="color:var(--green)">✓ Search complete — ${query}</span><br>
+      <span style="color:var(--blue2)">+${newEmail} new email leads · +${newResearch} research contacts</span><br>
+      <span style="color:var(--muted)">${skipped} skipped (duplicates or no contact info) · Est. cost: ~$${cost}</span>
+    </div>`;
+    addLog('in', 'Outscraper API: +'+newEmail+' email +'+newResearch+' research · '+query);
+
+  } catch(e) {
+    if(resultEl) resultEl.innerHTML = `<div style="background:rgba(234,67,53,0.1);border:1px solid rgba(234,67,53,0.2);border-radius:6px;padding:0.8rem;font-size:0.82rem;color:var(--red)">Error: ${e.message}</div>`;
+    if(statusEl) statusEl.textContent = '';
+    addLog('system', 'Outscraper API error: '+e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Pull from Outscraper';
+    if(statusEl) statusEl.textContent = '';
+  }
+}
+
 function renderUploadHistory() {
   const el = document.getElementById('upload-history');
   if (!el) return;
@@ -1183,6 +1417,7 @@ filteredResearch = [...researchList];
 updateStats();
 renderDashboard();
 addLog('system', 'LIPC initialized — Email: ' + emailLeads.length + ' · Research: ' + researchList.length);
+setTimeout(estimateCost, 500);
 </script>
 </body>
 </html>
