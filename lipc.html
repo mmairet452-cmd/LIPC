@@ -333,65 +333,148 @@ input[type=checkbox]{accent-color:var(--blue)}
 
       <div class="panel">
         <h3>Outscraper — Direct Search</h3>
-        <div class="info" style="margin-bottom:0.8rem">Pull leads directly from Outscraper without downloading CSV. Cost estimated before pulling. Target: $0.60–$0.90 per search.</div>
+        <div class="info" style="margin-bottom:0.8rem">Pull leads directly from Google Maps via Outscraper. Cost estimated before pulling. Target: $0.60–$0.90 per search. 🟢 = preferred industries · 🔵 = recommended.</div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
           <div style="display:flex;flex-direction:column;gap:0.4rem">
             <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Industry / Category</label>
-            <select id="os-industry" onchange="estimateCost()">
-              <option value="hvac contractor">HVAC Contractor</option>
-              <option value="general contractor">General Contractor</option>
-              <option value="construction company">Construction Company</option>
-              <option value="manufacturing company">Manufacturing Company</option>
-              <option value="freight company">Freight / Logistics</option>
-              <option value="auto repair shop">Auto Repair Shop</option>
-              <option value="warehouse facility">Warehouse / 3PL</option>
-              <option value="veterinary clinic">Veterinary Clinic</option>
-              <option value="software company">SaaS / Tech Company</option>
-              <option value="wholesale distributor">Wholesale Distributor</option>
+            <select id="os-industry" onchange="updateSubcategories();estimateCost()" style="border-left:3px solid var(--green)">
+              <optgroup label="🟢 Preferred — High Priority">
+                <option value="hvac contractor" data-subs="hvac contractor,air conditioning contractor,heating contractor,hvac service">HVAC Contractor</option>
+                <option value="general contractor" data-subs="general contractor,construction company,building contractor">General Contractor</option>
+                <option value="manufacturing company" data-subs="manufacturing company,industrial manufacturer,fabrication shop,metal fabricator">Manufacturing</option>
+                <option value="freight company" data-subs="freight company,trucking company,logistics company,transportation company">Freight / Logistics</option>
+              </optgroup>
+              <optgroup label="🔵 Recommended">
+                <option value="auto repair shop" data-subs="auto repair shop,auto body shop,automotive service,car mechanic">Auto Repair</option>
+                <option value="warehouse facility" data-subs="warehouse facility,fulfillment center,3pl warehouse,distribution center">Warehouse / 3PL</option>
+                <option value="wholesale distributor" data-subs="wholesale distributor,wholesale supplier,distribution company">Wholesale / Distribution</option>
+                <option value="plumbing contractor" data-subs="plumbing contractor,plumber,plumbing company">Plumbing Contractor</option>
+                <option value="electrical contractor" data-subs="electrical contractor,electrician,electrical company">Electrical Contractor</option>
+                <option value="roofing contractor" data-subs="roofing contractor,roofing company,roofer">Roofing Contractor</option>
+                <option value="landscaping company" data-subs="landscaping company,lawn care service,landscape contractor">Landscaping</option>
+                <option value="software company" data-subs="software company,saas company,technology company,it company">SaaS / Tech</option>
+                <option value="staffing agency" data-subs="staffing agency,temp agency,employment agency,recruiting firm">Staffing Agency</option>
+                <option value="medical practice" data-subs="medical practice,medical clinic,healthcare provider,urgent care">Medical Practice</option>
+              </optgroup>
+              <optgroup label="⚪ Other">
+                <option value="veterinary clinic" data-subs="veterinary clinic,animal hospital,vet clinic,veterinary practice">Veterinary Clinic</option>
+                <option value="restaurant" data-subs="restaurant,food service,catering company">Restaurant / Food Service</option>
+                <option value="law firm" data-subs="law firm,attorney office,legal services">Law Firm</option>
+                <option value="accounting firm" data-subs="accounting firm,cpa firm,bookkeeping service">Accounting / CPA</option>
+                <option value="real estate company" data-subs="real estate company,property management,real estate broker">Real Estate</option>
+                <option value="dental practice" data-subs="dental practice,dentist office,dental clinic">Dental Practice</option>
+                <option value="physical therapy" data-subs="physical therapy,rehabilitation center,sports medicine clinic">Physical Therapy</option>
+                <option value="insurance agency" data-subs="insurance agency,insurance broker,insurance company">Insurance Agency</option>
+                <option value="marketing agency" data-subs="marketing agency,advertising agency,digital marketing">Marketing Agency</option>
+                <option value="printing company" data-subs="printing company,print shop,commercial printer">Printing Company</option>
+              </optgroup>
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Subcategory <span style="color:var(--muted);font-weight:300">(optional — narrows search)</span></label>
+            <select id="os-subcategory" onchange="estimateCost()">
+              <option value="">Use main category only</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
             <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">State</label>
             <select id="os-state" onchange="estimateCost()">
-              <option value="Texas">Texas (TX)</option>
-              <option value="Ohio">Ohio (OH)</option>
-              <option value="Illinois">Illinois (IL)</option>
-              <option value="Georgia">Georgia (GA)</option>
-              <option value="Florida">Florida (FL)</option>
-              <option value="California">California (CA)</option>
-              <option value="Michigan">Michigan (MI)</option>
-              <option value="Pennsylvania">Pennsylvania (PA)</option>
+              <optgroup label="🟢 Primary Markets">
+                <option value="Texas">Texas (TX)</option>
+                <option value="Ohio">Ohio (OH)</option>
+                <option value="Illinois">Illinois (IL)</option>
+                <option value="Georgia">Georgia (GA)</option>
+              </optgroup>
+              <optgroup label="All States">
+                <option value="Alabama">Alabama (AL)</option>
+                <option value="Alaska">Alaska (AK)</option>
+                <option value="Arizona">Arizona (AZ)</option>
+                <option value="Arkansas">Arkansas (AR)</option>
+                <option value="California">California (CA)</option>
+                <option value="Colorado">Colorado (CO)</option>
+                <option value="Connecticut">Connecticut (CT)</option>
+                <option value="Delaware">Delaware (DE)</option>
+                <option value="Florida">Florida (FL)</option>
+                <option value="Hawaii">Hawaii (HI)</option>
+                <option value="Idaho">Idaho (ID)</option>
+                <option value="Indiana">Indiana (IN)</option>
+                <option value="Iowa">Iowa (IA)</option>
+                <option value="Kansas">Kansas (KS)</option>
+                <option value="Kentucky">Kentucky (KY)</option>
+                <option value="Louisiana">Louisiana (LA)</option>
+                <option value="Maine">Maine (ME)</option>
+                <option value="Maryland">Maryland (MD)</option>
+                <option value="Massachusetts">Massachusetts (MA)</option>
+                <option value="Michigan">Michigan (MI)</option>
+                <option value="Minnesota">Minnesota (MN)</option>
+                <option value="Mississippi">Mississippi (MS)</option>
+                <option value="Missouri">Missouri (MO)</option>
+                <option value="Montana">Montana (MT)</option>
+                <option value="Nebraska">Nebraska (NE)</option>
+                <option value="Nevada">Nevada (NV)</option>
+                <option value="New Hampshire">New Hampshire (NH)</option>
+                <option value="New Jersey">New Jersey (NJ)</option>
+                <option value="New Mexico">New Mexico (NM)</option>
+                <option value="New York">New York (NY)</option>
+                <option value="North Carolina">North Carolina (NC)</option>
+                <option value="North Dakota">North Dakota (ND)</option>
+                <option value="Oklahoma">Oklahoma (OK)</option>
+                <option value="Oregon">Oregon (OR)</option>
+                <option value="Pennsylvania">Pennsylvania (PA)</option>
+                <option value="Rhode Island">Rhode Island (RI)</option>
+                <option value="South Carolina">South Carolina (SC)</option>
+                <option value="South Dakota">South Dakota (SD)</option>
+                <option value="Tennessee">Tennessee (TN)</option>
+                <option value="Utah">Utah (UT)</option>
+                <option value="Vermont">Vermont (VT)</option>
+                <option value="Virginia">Virginia (VA)</option>
+                <option value="Washington">Washington (WA)</option>
+                <option value="West Virginia">West Virginia (WV)</option>
+                <option value="Wisconsin">Wisconsin (WI)</option>
+                <option value="Wyoming">Wyoming (WY)</option>
+              </optgroup>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Limit (records)</label>
+            <select id="os-limit" onchange="estimateCost()">
+              <option value="100">100 records (~$0.30)</option>
+              <option value="150">150 records (~$0.45)</option>
+              <option value="200" selected>200 records (~$0.62) ← recommended</option>
+              <option value="300">300 records (~$0.90)</option>
+              <option value="400">400 records (~$1.20)</option>
+              <option value="500">500 records (~$1.50) ← max recommended</option>
             </select>
           </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.8rem;margin-bottom:0.8rem">
           <div style="display:flex;flex-direction:column;gap:0.4rem">
-            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Limit (records)</label>
-            <select id="os-limit" onchange="estimateCost()">
-              <option value="100">100 records</option>
-              <option value="150">150 records</option>
-              <option value="200" selected>200 records</option>
-              <option value="300">300 records</option>
-              <option value="400">400 records</option>
-              <option value="500">500 records</option>
-            </select>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:0.4rem">
             <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Min Rating</label>
             <select id="os-minrating" onchange="estimateCost()">
               <option value="3.0">3.0</option>
-              <option value="3.5" selected>3.5</option>
+              <option value="3.5" selected>3.5 ← recommended</option>
               <option value="4.0">4.0</option>
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:0.4rem">
             <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Max Rating</label>
             <select id="os-maxrating" onchange="estimateCost()">
-              <option value="4.2" selected>4.2</option>
+              <option value="4.2" selected>4.2 ← recommended</option>
               <option value="4.5">4.5</option>
               <option value="5.0">5.0 (no max)</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <label style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Contact Enrichment</label>
+            <select id="os-enrichment">
+              <option value="emails_validator" selected>Emails + Validator</option>
+              <option value="contacts">Contacts Only</option>
+              <option value="none">No Enrichment (cheaper)</option>
             </select>
           </div>
         </div>
@@ -409,7 +492,7 @@ input[type=checkbox]{accent-color:var(--blue)}
           </div>
         </div>
 
-        <div style="display:flex;gap:0.5rem;align-items:center">
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="runOutscraperSearch()" id="os-btn">Pull from Outscraper</button>
           <button class="btn btn-ghost btn-sm" onclick="estimateCost()">Refresh Estimate</button>
           <div id="os-status" style="font-size:0.78rem;color:var(--muted)"></div>
@@ -998,17 +1081,32 @@ function bulkApprove() {
   saveAll(); applyFilters(); updateStats();
 }
 
-function pushSelected() {
+async function pushSelected() {
   document.querySelectorAll('.chk:checked').forEach(cb => {
     const l = emailLeads.find(x => x.id === cb.dataset.id);
     if (l && l.status === 'approved') { l.status = 'pushed'; l.pushed_date = new Date().toISOString().split('T')[0]; addLog('out','Pushed: '+l.company); }
   });
-  saveAll(); applyFilters(); updateStats();
+  await saveAll(); applyFilters(); updateStats();
+  // Auto sync pushed leads to Supabase
+  if(supaReady && supa){
+    const pushed = emailLeads.filter(l=>l.status==='pushed');
+    for(let i=0;i<pushed.length;i+=50){
+      await supa.from('email_leads').upsert(pushed.slice(i,i+50),{onConflict:'email'});
+    }
+    addLog('system','Auto-synced '+pushed.length+' pushed leads to Supabase');
+  }
 }
 
-function pushAll() {
+async function pushAll() {
   emailLeads.filter(l => l.status === 'approved').forEach(l => { l.status = 'pushed'; l.pushed_date = new Date().toISOString().split('T')[0]; });
-  saveAll(); applyFilters(); updateStats();
+  await saveAll(); applyFilters(); updateStats();
+  if(supaReady && supa){
+    const pushed = emailLeads.filter(l=>l.status==='pushed');
+    for(let i=0;i<pushed.length;i+=50){
+      await supa.from('email_leads').upsert(pushed.slice(i,i+50),{onConflict:'email'});
+    }
+    addLog('system','Auto-synced '+pushed.length+' pushed leads to Supabase');
+  }
 }
 
 function toggleAll(cb) { document.querySelectorAll('.chk').forEach(c => c.checked = cb.checked); }
@@ -1217,6 +1315,16 @@ async function forceSyncSupabase() {
 }
 
 // ── Outscraper API ────────────────────────────────────────────────
+function updateSubcategories(){
+  const sel = document.getElementById('os-industry');
+  const sub = document.getElementById('os-subcategory');
+  if(!sel||!sub)return;
+  const opt = sel.options[sel.selectedIndex];
+  const subs = (opt.dataset.subs||'').split(',').map(s=>s.trim()).filter(Boolean);
+  sub.innerHTML = '<option value="">Use main category only</option>' +
+    subs.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
 function estimateCost(){
   const limit = parseInt(document.getElementById('os-limit')?.value)||200;
   // Outscraper pricing: ~$0.001 per basic record + $0.002 per email enrichment
@@ -1267,7 +1375,9 @@ async function runOutscraperSearch(){
   if(statusEl) statusEl.textContent = 'Calling Outscraper API...';
 
   try {
-    const query = `${industry}, ${state}, USA`;
+    const subcategory = document.getElementById('os-subcategory')?.value||'';
+    const searchTerm = subcategory || industry;
+    const query = `${searchTerm}, ${state}, USA`;
     const params = new URLSearchParams({
       query: query,
       limit: limit,
@@ -1300,7 +1410,9 @@ async function runOutscraperSearch(){
       const rating = parseFloat(row.rating)||0;
       if(maxRating < 5 && rating > maxRating) { skipped++; return; }
 
-      const email = (row.email || '').trim().toLowerCase();
+      // Try multiple email field names from Outscraper
+      const email = (row.email || row['contact_email'] || row['emails'] || 
+                     row['email_1'] || row['email_address'] || '').trim().toLowerCase();
       const phone = row.phone || row.company_phone || '';
       const hasEmail = !!email;
 
